@@ -1,8 +1,16 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
+import kafka.MyConsumer;
+import kafka.MyProducer;
+import model.User;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.kafka.ConfluentKafkaContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import utils.JacksonUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -12,17 +20,26 @@ public class KafkaMethodsTest {
 
     @Container
     public ConfluentKafkaContainer kafkaContainer = new ConfluentKafkaContainer("confluentinc/cp-kafka:latest");
+    String topicName = "Users";
+    MyProducer myProducer;
+    MyConsumer myConsumer;
 
+    @BeforeEach
+    void setUp() {
+        String bootstrapServers = kafkaContainer.getBootstrapServers();
+        myProducer = new MyProducer(bootstrapServers, topicName);
+        myConsumer = new MyConsumer(bootstrapServers, topicName);
+    }
 
     @Test
     void userTest() throws JsonProcessingException {
 
-        String bootstrapServers = kafkaContainer.getBootstrapServers();
-        String topicName = "Users";
-        SendMessage service = new SendMessage(bootstrapServers, topicName);
-        service.send(service.toJson());
+        List hobbies = new ArrayList<>();
+        hobbies.addAll(List.of("reading", "traveling", "swimming"));
+        User user = new User("John", 30, hobbies);
 
-        User user = GetMessage.get(topicName, bootstrapServers);
+        myProducer.send(JacksonUtils.toJson(user));
+        myConsumer.get(User.class);
 
         assertThat(user.getName()).isEqualTo("John");
         assertThat(user.getAge()).isEqualTo(30);
