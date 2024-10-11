@@ -33,16 +33,13 @@ public class KafkaMethodsTest {
 
     @Test
     void userTest() throws JsonProcessingException {
-
         List hobbies = new ArrayList<>();
         hobbies.addAll(List.of("reading", "traveling", "swimming"));
-        User user = new User("John", 30, hobbies);
-
-        myProducer.send(JacksonUtils.toJson(user));
-        myConsumer.get(User.class);
-
-        assertThat(user.getName()).isEqualTo("John");
-        assertThat(user.getAge()).isEqualTo(30);
-        assertThat(user.getHobbies()).containsExactlyInAnyOrder("swimming", "traveling", "reading");
+        User sendUser = new User("John", 30, hobbies);
+        myProducer.send(JacksonUtils.toJson(sendUser));
+        User getUser = myConsumer.get(User.class);
+        assertThat(getUser.getName()).isEqualTo("John");
+        assertThat(getUser.getAge()).isEqualTo(30);
+        assertThat(getUser.getHobbies()).containsExactlyInAnyOrder("swimming", "traveling", "reading");
     }
 }
